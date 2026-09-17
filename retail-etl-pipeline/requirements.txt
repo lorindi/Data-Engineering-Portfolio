@@ -1,0 +1,6 @@
+pandas
+pandera
+pyarrow
+s3fs
+apache-airflow-providers-amazon
+apache-airflow-providers-snowflake

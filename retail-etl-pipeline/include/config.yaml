@@ -1,0 +1,8 @@
+aws_conn_id: aws_conn_id
+
+s3:
+  bucket: globoretail-pipeline-lora
+  folder: raw/
+  output_folder: outputs/
+  analytics: analytics/
+  staging_folder: staging/
