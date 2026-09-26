@@ -1,0 +1,38 @@
+# ---------- Data files ----------
+# Raw and generated data - too big for git
+data/
+*.csv
+*.parquet
+
+# ---------- Secrets and credentials ----------
+# Snowflake, AWS and other passwords - never commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.p8
+profiles.yml
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+
+# ---------- Airflow / Astro CLI ----------
+airflow/.astro/config.yaml.lock
+airflow/logs/
+airflow/airflow_settings.yaml
+
+# ---------- dbt ----------
+dbt_banking/target/
+dbt_banking/dbt_packages/
+dbt_banking/logs/
+
+# ---------- IDE and OS ----------
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
