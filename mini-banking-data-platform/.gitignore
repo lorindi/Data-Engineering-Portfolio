@@ -5,7 +5,7 @@ data/
 *.parquet
 
 # ---------- Secrets and credentials ----------
-# Snowflake, AWS and other passwords - never commit these
+# Snowflake, AWS and other passwords and keys - never commit these
 .env
 .env.*
 !.env.example
@@ -27,9 +27,11 @@ airflow/logs/
 airflow/airflow_settings.yaml
 
 # ---------- dbt ----------
+# Compiled SQL, downloaded packages and run logs are created again on every run
 dbt_banking/target/
 dbt_banking/dbt_packages/
 dbt_banking/logs/
+logs/
 
 # ---------- IDE and OS ----------
 .idea/
