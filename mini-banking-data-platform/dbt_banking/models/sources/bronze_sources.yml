@@ -1,0 +1,24 @@
+version: 2
+
+sources:
+  - name: bronze
+    description: "Raw Berka files loaded 1 to 1 from S3 with COPY INTO. All columns are text."
+    database: BANKING_DATA_PLATFORM
+    schema: BRONZE
+    tables:
+      - name: berka_client_raw
+        description: "Raw clients from client.csv."
+      - name: berka_account_raw
+        description: "Raw accounts from account.csv."
+      - name: berka_disp_raw
+        description: "Raw dispositions from disp.csv. Links clients to accounts."
+      - name: berka_card_raw
+        description: "Raw credit cards from card.csv."
+      - name: berka_loan_raw
+        description: "Raw loans from loan.csv."
+      - name: berka_order_raw
+        description: "Raw permanent orders from order.csv."
+      - name: berka_trans_raw
+        description: "Raw transactions from trans.csv. About one million rows."
+      - name: berka_district_raw
+        description: "Raw districts from district.csv. Columns A1 to A16."
