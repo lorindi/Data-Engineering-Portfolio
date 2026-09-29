@@ -1,0 +1,65 @@
+version: 2
+
+models:
+  - name: hub_loan
+    description: "Hub for loans. One row for each unique loan ID. Insert only."
+    columns:
+      - name: LOAN_HASH_KEY
+        description: "MD5 hash of the loan ID. Primary key of the hub."
+        data_tests:
+          - unique
+          - not_null
+      - name: LOAN_ID
+        description: "Loan ID from the source system (business key)."
+        data_tests:
+          - unique
+          - not_null
+  - name: sat_loan_details
+    description: "Loan details with full history. A new row is added when the details change."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - LOAN_HASH_KEY
+              - LOAD_DATE
+    columns:
+      - name: LOAN_HASH_KEY
+        description: "Points to HUB_LOAN."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_loan')
+                field: LOAN_HASH_KEY
+      - name: STATUS
+        description: "A = finished, paid. B = finished, not paid. C = running, OK. D = running, client in debt."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['A', 'B', 'C', 'D']
+
+  - name: link_loan_account
+    description: "Link between loans and accounts. One row for each loan and account pair."
+    columns:
+      - name: LOAN_ACCOUNT_HASH_KEY
+        description: "MD5 hash of loan ID and account ID together. Primary key of the link."
+        data_tests:
+          - unique
+          - not_null
+      - name: LOAN_HASH_KEY
+        description: "Points to HUB_LOAN."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_loan')
+                field: LOAN_HASH_KEY
+      - name: ACCOUNT_HASH_KEY
+        description: "Points to HUB_ACCOUNT."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_account')
+                field: ACCOUNT_HASH_KEY
