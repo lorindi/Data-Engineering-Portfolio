@@ -1,4 +1,4 @@
--- Staging for accounts: newest row of each account from Bronze, with hash keys.
+-- Staging for accounts. Takes the newest row of each account from Bronze and makes the hash keys.
 with newest_account_rows_from_bronze as (
     select
         trim(ACCOUNT_ID)      as ACCOUNT_ID,

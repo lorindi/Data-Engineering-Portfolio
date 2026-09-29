@@ -1,4 +1,4 @@
-
+-- Staging for clients. Takes the newest row of each client from Bronze and makes the hash keys.
 with newest_client_rows_from_bronze as (
     select
         trim(CLIENT_ID)       as CLIENT_ID,

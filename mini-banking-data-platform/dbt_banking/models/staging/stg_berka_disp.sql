@@ -1,4 +1,4 @@
--- Staging for dispositions: one row for each client and account pair, with hash keys for both hubs and the link.
+-- Staging for dispositions. Keeps one row for each client and account pair and makes the hash keys for the link.
 with newest_disposition_rows_from_bronze as (
     select
         trim(CLIENT_ID)       as CLIENT_ID,
