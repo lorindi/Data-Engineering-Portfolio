@@ -1,6 +1,7 @@
 version: 2
 
 models:
+  # One row per loan, no empty IDs
   - name: hub_loan
     description: "Hub for loans. One row for each unique loan ID. Insert only."
     columns:
@@ -14,6 +15,8 @@ models:
         data_tests:
           - unique
           - not_null
+
+  # A loan can change over time (C -> D), so many versions are fine, one per load date
   - name: sat_loan_details
     description: "Loan details with full history. A new row is added when the details change."
     data_tests:
@@ -23,6 +26,7 @@ models:
               - LOAN_HASH_KEY
               - LOAD_DATE
     columns:
+      # Must point to a real loan in the hub
       - name: LOAN_HASH_KEY
         description: "Points to HUB_LOAN."
         data_tests:
@@ -31,6 +35,7 @@ models:
               arguments:
                 to: ref('hub_loan')
                 field: LOAN_HASH_KEY
+      # Only A, B, C or D. A new code from the bank should fail here, not end up in a report
       - name: STATUS
         description: "A = finished, paid. B = finished, not paid. C = running, OK. D = running, client in debt."
         data_tests:
@@ -39,6 +44,7 @@ models:
               arguments:
                 values: ['A', 'B', 'C', 'D']
 
+  # Each loan-account pair only once
   - name: link_loan_account
     description: "Link between loans and accounts. One row for each loan and account pair."
     columns:
@@ -47,6 +53,7 @@ models:
         data_tests:
           - unique
           - not_null
+      # Both sides of the link must exist in their hubs
       - name: LOAN_HASH_KEY
         description: "Points to HUB_LOAN."
         data_tests:

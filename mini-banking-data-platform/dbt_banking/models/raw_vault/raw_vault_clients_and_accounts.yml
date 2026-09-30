@@ -1,0 +1,120 @@
+version: 2
+
+models:
+  # One row per client, no empty IDs
+  - name: hub_client
+    description: "Hub for clients. One row for each unique client ID. Insert only."
+    columns:
+      - name: CLIENT_HASH_KEY
+        description: "MD5 hash of the client ID. Primary key of the hub."
+        data_tests:
+          - unique
+          - not_null
+      - name: CLIENT_ID
+        description: "Client ID from the source system (business key)."
+        data_tests:
+          - unique
+          - not_null
+
+  # One row per account, no empty IDs
+  - name: hub_account
+    description: "Hub for bank accounts. One row for each unique account ID. Insert only."
+    columns:
+      - name: ACCOUNT_HASH_KEY
+        description: "MD5 hash of the account ID. Primary key of the hub."
+        data_tests:
+          - unique
+          - not_null
+      - name: ACCOUNT_ID
+        description: "Account ID from the source system (business key)."
+        data_tests:
+          - unique
+          - not_null
+
+  # Many versions per client are fine, just not two on the same load date
+  - name: sat_client_details
+    description: "Client details with full history: birth number and district."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - CLIENT_HASH_KEY
+              - LOAD_DATE
+    columns:
+      # Must point to a real client in the hub
+      - name: CLIENT_HASH_KEY
+        description: "Points to HUB_CLIENT."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_client')
+                field: CLIENT_HASH_KEY
+
+  # Same rule as for clients: one version per load date
+  - name: sat_account_details
+    description: "Account details with full history: district, statement frequency and opening date."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - ACCOUNT_HASH_KEY
+              - LOAD_DATE
+    columns:
+      # Must point to a real account in the hub
+      - name: ACCOUNT_HASH_KEY
+        description: "Points to HUB_ACCOUNT."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_account')
+                field: ACCOUNT_HASH_KEY
+
+  # Each client-account pair only once
+  - name: link_client_account
+    description: "Link between clients and accounts. One account can have more than one client."
+    columns:
+      - name: CLIENT_ACCOUNT_HASH_KEY
+        description: "MD5 hash of client ID and account ID together. Primary key of the link."
+        data_tests:
+          - unique
+          - not_null
+      # Snowflake doesn't enforce foreign keys, so the check lives here
+      - name: CLIENT_HASH_KEY
+        description: "Points to HUB_CLIENT."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_client')
+                field: CLIENT_HASH_KEY
+      - name: ACCOUNT_HASH_KEY
+        description: "Points to HUB_ACCOUNT."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_account')
+                field: ACCOUNT_HASH_KEY
+
+  # Role of the client on the account, must belong to an existing link
+  - name: sat_client_account_details
+    description: "Details of the client and account link: the role of the client on the account."
+    columns:
+      - name: CLIENT_ACCOUNT_HASH_KEY
+        description: "Points to LINK_CLIENT_ACCOUNT."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('link_client_account')
+                field: CLIENT_ACCOUNT_HASH_KEY
+      # Only OWNER or DISPONENT, anything else should fail
+      - name: TYPE
+        description: "OWNER = owns the account. DISPONENT = can use the account but does not own it."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['OWNER', 'DISPONENT']
