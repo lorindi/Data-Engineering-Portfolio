@@ -38,3 +38,10 @@ models:
       +schema: SILVER_RAW_VAULT
       +materialized: incremental
       +transient: false
+    business_vault:
+      +schema: SILVER_BUSINESS_VAULT
+      +materialized: view
+
+data_tests:
+  dbt_banking:
+    +schema: DATA_QUALITY
