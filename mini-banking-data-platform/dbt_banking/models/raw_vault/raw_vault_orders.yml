@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  # One row per order, no empty IDs
+  - name: hub_order
+    description: "Hub for permanent orders (regular payments set up by the account owner). One row for each unique order ID. Insert only."
+    columns:
+      - name: ORDER_HASH_KEY
+        description: "MD5 hash of the order ID. Primary key of the hub."
+        data_tests:
+          - unique
+          - not_null
+      - name: ORDER_ID
+        description: "Order ID from the source system (business key)."
+        data_tests:
+          - unique
+          - not_null
+
+  # One version per order per load date
+  - name: sat_order_details
+    description: "Permanent order details with full history: receiving bank and account, amount and payment purpose."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - ORDER_HASH_KEY
+              - LOAD_DATE
+    columns:
+      - name: ORDER_HASH_KEY
+        description: "Points to HUB_ORDER."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_order')
+                field: ORDER_HASH_KEY
+
+  # Each order-account pair only once, and both sides must exist in their hubs
+  - name: link_order_account
+    description: "Link between permanent orders and the accounts that pay them."
+    columns:
+      - name: ORDER_ACCOUNT_HASH_KEY
+        description: "MD5 hash of order ID and account ID together. Primary key of the link."
+        data_tests:
+          - unique
+          - not_null
+      - name: ORDER_HASH_KEY
+        description: "Points to HUB_ORDER."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_order')
+                field: ORDER_HASH_KEY
+      - name: ACCOUNT_HASH_KEY
+        description: "Points to HUB_ACCOUNT."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_account')
+                field: ACCOUNT_HASH_KEY
