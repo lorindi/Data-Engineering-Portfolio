@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  # Every district only once, no empty IDs
+  - name: ref_district
+    description: "Reference table for the 77 districts of the Czech Republic, with population, salary, unemployment and crime data. Rebuilt on every run."
+    columns:
+      - name: DISTRICT_ID
+        description: "District code from the source file (column A1)."
+        data_tests:
+          - unique
+          - not_null
+      - name: DISTRICT_NAME
+        description: "District name, for example Hl.m. Praha."
+        data_tests:
+          - not_null
+      # Kept as text on purpose: some districts have "?" instead of a number
+      - name: UNEMPLOYMENT_RATE_1995
+        description: "Unemployment rate in 1995, in percent. Text, can be '?'."
+      - name: NUMBER_OF_CRIMES_1995
+        description: "Number of crimes in 1995. Text, can be '?'."
