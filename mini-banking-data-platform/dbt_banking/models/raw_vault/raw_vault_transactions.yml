@@ -1,0 +1,73 @@
+version: 2
+
+models:
+  # One row per transaction, no empty IDs
+  - name: hub_transaction
+    description: "Hub for transactions. One row for each unique transaction ID. Insert only."
+    columns:
+      - name: TRANSACTION_HASH_KEY
+        description: "MD5 hash of the transaction ID. Primary key of the hub."
+        data_tests:
+          - unique
+          - not_null
+      - name: TRANS_ID
+        description: "Transaction ID from the source system (business key)."
+        data_tests:
+          - unique
+          - not_null
+
+  # Transactions normally never change, but the rule stays the same: one version per load date
+  - name: sat_transaction_details
+    description: "Transaction details with full history: date, type, operation, amount, balance and the other side of the payment."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - TRANSACTION_HASH_KEY
+              - LOAD_DATE
+    columns:
+      - name: TRANSACTION_HASH_KEY
+        description: "Points to HUB_TRANSACTION."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_transaction')
+                field: TRANSACTION_HASH_KEY
+      # PRIJEM = money in, VYDAJ = money out. Only a warning, so an unknown code is visible but does not stop the build
+      - name: TYPE
+        description: "Direction of the money in Czech: PRIJEM = money in, VYDAJ = money out."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['PRIJEM', 'VYDAJ']
+              config:
+                severity: warn
+
+  # Each transaction-account pair only once
+  - name: link_transaction_account
+    description: "Link between transactions and accounts. One row for each transaction and account pair."
+    columns:
+      - name: TRANSACTION_ACCOUNT_HASH_KEY
+        description: "MD5 hash of transaction ID and account ID together. Primary key of the link."
+        data_tests:
+          - unique
+          - not_null
+      # Both sides of the link must exist in their hubs
+      - name: TRANSACTION_HASH_KEY
+        description: "Points to HUB_TRANSACTION."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_transaction')
+                field: TRANSACTION_HASH_KEY
+      - name: ACCOUNT_HASH_KEY
+        description: "Points to HUB_ACCOUNT."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_account')
+                field: ACCOUNT_HASH_KEY
