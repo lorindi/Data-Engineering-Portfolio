@@ -1,5 +1,9 @@
 -- Staging for loans. Takes the newest row of each loan from Bronze and makes the hash keys for the loan, the account and the link.
 
+
+-- Reads from Bronze (source: bronze.berka_loan_raw).
+-- Runs first. hub_loan, sat_loan_details and link_loan_account read from this view.
+
 with newest_loan_rows_from_bronze as (
     select
         trim(LOAN_ID) as LOAN_ID,
