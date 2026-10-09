@@ -1,0 +1,78 @@
+version: 2
+
+models:
+  # One row per card, no empty IDs
+  - name: hub_card
+    description: "Hub for credit cards. One row for each unique card ID. Insert only."
+    columns:
+      - name: CARD_HASH_KEY
+        description: "MD5 hash of the card ID. Primary key of the hub."
+        data_tests:
+          - unique
+          - not_null
+      - name: CARD_ID
+        description: "Card ID from the source system (business key)."
+        data_tests:
+          - unique
+          - not_null
+
+  # One version per card per load date
+  - name: sat_card_details
+    description: "Card details with full history: card type, issue date and the disposition behind the card."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - CARD_HASH_KEY
+              - LOAD_DATE
+    columns:
+      - name: CARD_HASH_KEY
+        description: "Points to HUB_CARD."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_card')
+                field: CARD_HASH_KEY
+      # Only three card types exist in the bank
+      - name: TYPE
+        description: "Card type: junior, classic or gold."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['junior', 'classic', 'gold']
+
+  # One card, one client, one account. All three must exist in their hubs
+  - name: link_card_client_account
+    description: "Link between a card, the client who uses it and the account it is for."
+    columns:
+      - name: CARD_CLIENT_ACCOUNT_HASH_KEY
+        description: "MD5 hash of card ID, client ID and account ID together. Primary key of the link."
+        data_tests:
+          - unique
+          - not_null
+      - name: CARD_HASH_KEY
+        description: "Points to HUB_CARD."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_card')
+                field: CARD_HASH_KEY
+      - name: CLIENT_HASH_KEY
+        description: "Points to HUB_CLIENT."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_client')
+                field: CLIENT_HASH_KEY
+      - name: ACCOUNT_HASH_KEY
+        description: "Points to HUB_ACCOUNT."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('hub_account')
+                field: ACCOUNT_HASH_KEY
